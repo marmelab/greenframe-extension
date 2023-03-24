@@ -4,21 +4,18 @@ import './Popup.css';
 
 const Popup = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/pages/Popup/Popup.jsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React!
-        </a>
+    <div className="popup">
+      <header className="header">
+        <img src={logo} className="header_logo" alt="greenframe" />
+        <h1 className="header_title">GreenFrame</h1>
       </header>
+      <section className="section">
+        <button className="button">Launch Analyze!</button>
+      </section>
+      <footer className="footer">
+        <p className="footer_text">Made with ❤ by Marmelab</p>
+        <a href='https://greenframe.io/' className="footer_link">https://greenframe.io/</a>
+      </footer>
     </div>
   );
 };
