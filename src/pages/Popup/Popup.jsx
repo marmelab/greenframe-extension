@@ -2,7 +2,20 @@ import React from 'react';
 import logo from '../../assets/img/logo.svg';
 import './Popup.css';
 
+async function getCurrentTab() {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  return tab;
+}
+
 const Popup = () => {
+
+  async function handleClick() {
+    const tab = await getCurrentTab();
+    console.log('Tab', tab)
+  }
+
   return (
     <div className="popup">
       <header className="header">
@@ -10,7 +23,7 @@ const Popup = () => {
         <h1 className="header_title">GreenFrame</h1>
       </header>
       <section className="section">
-        <button className="button">Launch Analyze!</button>
+        <button className="button" onClick={() => handleClick()}>Launch Analyze!</button>
       </section>
       <footer className="footer">
         <p className="footer_text">Made with ❤ by Marmelab</p>
