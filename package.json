@@ -1,8 +1,8 @@
 {
   "name": "greenframe-extension",
-  "version": "5.0.4",
+  "version": "1.0.0",
   "description": "a greenframe extension",
-  "license": "MIT",
+  "license": "Elastic License v2.0",
   "scripts": {
     "build": "node utils/build.js",
     "start": "node utils/webserver.js",
