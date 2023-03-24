@@ -15,6 +15,7 @@ var alias = {};
 
 // load the secrets
 var secretsPath = path.join(__dirname, 'secrets.' + env.NODE_ENV + '.js');
+console.log('this is', secretsPath);
 
 var fileExtensions = [
   'jpg',
