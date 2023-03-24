@@ -17,7 +17,7 @@ const Popup = () => {
   }
 
   return (
-    <div className="popup">
+    <div className="greenframe_popup">
       <header className="header">
         <img src={logo} className="header_logo" alt="greenframe" />
         <h1 className="header_title">GreenFrame</h1>
