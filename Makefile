@@ -14,5 +14,7 @@ run-dev: ## Start lodex
 	npm run start
 	@echo "Greenframe extension is now started"
 	
-build: ## Build the extension locally
+build-extension: ## Build the extension locally
+	@echo "Building extension"
 	npm run build
+	@echo "Extension built"
