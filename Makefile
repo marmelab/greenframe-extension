@@ -9,7 +9,7 @@ install: ## Install package extension
 	npm install
 	@echo "Packages installed"
 
-run-dev: ## Start lodex
+run-dev: ## Start extension
 	@echo "Starting extension"
 	npm run start
 	@echo "Greenframe extension is now started"
