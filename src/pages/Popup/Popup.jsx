@@ -4,28 +4,27 @@ import logo from '../../assets/img/logo.svg';
 import './Popup.css';
 
 const REACT_APP_TOKEN = secrets.REACT_APP_TOKEN;
+
 async function getCurrentTab() {
   let queryOptions = { active: true, lastFocusedWindow: true };
-  // `tab` will either be a `tabs.Tab` instance or `undefined`.
   let [tab] = await chrome.tabs.query(queryOptions);
   return tab;
 }
 async function createAnalyse(url) {
-  var myHeaders = new Headers();
+  const myHeaders = new Headers();
   myHeaders.append('Authorization', `Bearer ${REACT_APP_TOKEN}`);
   myHeaders.append('Content-Type', 'application/json');
 
-  var raw = JSON.stringify({
+  const body = JSON.stringify({
     projectName: 'extension',
     url,
-    distant: true,
     samples: '2',
   });
 
-  var requestOptions = {
+  const requestOptions = {
     method: 'POST',
     headers: myHeaders,
-    body: raw,
+    body,
     redirect: 'follow',
   };
 
@@ -35,13 +34,13 @@ async function createAnalyse(url) {
   )
     .then((response) => response.json())
     .then((result) => result)
-    .catch((error) => console.log('error', error));
+    .catch((error) => { throw new Error(error) });
 
   return createAnalyse;
 }
 
 async function getAnalyseById(id) {
-  var requestOptions = {
+  const requestOptions = {
     method: 'GET',
     redirect: 'follow',
   };
@@ -53,13 +52,48 @@ async function getAnalyseById(id) {
 }
 
 const Popup = () => {
+  const [loading, setLoading] = React.useState(false);
+  const [result, setResult] = React.useState(null);
+  const [error, setError] = React.useState(false);
+
   async function handleClick() {
+    setLoading(true);
     const tab = await getCurrentTab();
     const url = tab.url;
-    console.log('Tab', tab);
-    const createdAnalyse = await createAnalyse(url);
-    const resultedAnalyse = await getAnalyseById(createdAnalyse?.id);
-    console.log(resultedAnalyse);
+
+    let createdAnalyse;
+    try {
+      createdAnalyse = await createAnalyse(url);
+    } catch (error) {
+      console.log(error);
+      setError(true);
+      setLoading(false);
+      return;
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const resultedAnalyse = await getAnalyseById(createdAnalyse?.id);
+        if (resultedAnalyse.status === 'finished') {
+          clearInterval(interval);
+          setResult(resultedAnalyse);
+          setLoading(false);
+        }
+        if (resultedAnalyse.status === 'failed') {
+          clearInterval(interval);
+          setError(true);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.log(error);
+        clearInterval(interval);
+        setError(true);
+        setLoading(false);
+      }
+
+
+    }, 5000);
+
   }
 
   return (
@@ -69,9 +103,18 @@ const Popup = () => {
         <h1 className="header_title">GreenFrame</h1>
       </header>
       <section className="section">
-        <button className="button" onClick={() => handleClick()}>
+        <button className="button" onClick={() => handleClick()} disabled={loading}>
           Launch Analyze!
         </button>
+
+        {loading && (<div className="loading"><p>Pending Analyze</p><div className="dot_elastic"></div></div>)}
+        {error && <p className="error">A error occured, please restart the analyze</p>}
+        {result && (
+          <div className="result">
+            <p className="result_title">Result:</p>
+            <p className="result_text">{result.status}</p>
+          </div>
+        )}
       </section>
       <footer className="footer">
         <p className="footer_text">Made with ❤ by Marmelab</p>
