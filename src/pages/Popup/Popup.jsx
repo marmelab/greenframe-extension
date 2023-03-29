@@ -74,12 +74,15 @@ const Popup = () => {
     const interval = setInterval(async () => {
       try {
         const resultedAnalyse = await getAnalyseById(createdAnalyse?.id);
-        if (resultedAnalyse.status === 'finished') {
+        const parsedResult = JSON.parse(resultedAnalyse);
+        console.log(resultedAnalyse);
+        console.log(parsedResult.status)
+        if (parsedResult.status === 'finished') {
           clearInterval(interval);
-          setResult(resultedAnalyse);
+          setResult(parsedResult);
           setLoading(false);
         }
-        if (resultedAnalyse.status === 'failed') {
+        if (parsedResult.status === 'failed') {
           clearInterval(interval);
           setError(true);
           setLoading(false);
@@ -111,8 +114,10 @@ const Popup = () => {
         {error && <p className="error">A error occured, please restart the analyze</p>}
         {result && (
           <div className="result">
-            <p className="result_title">Result:</p>
-            <p className="result_text">{result.status}</p>
+            <p className="result_title">Result: {result.status}</p>
+            <p className="result_text">
+              <span className="result_text_bold">{JSON.stringify(result.score)}</span>
+            </p>
           </div>
         )}
       </section>
