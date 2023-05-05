@@ -1,14 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import secrets from 'secrets';
 import logo from '../../assets/img/logo.svg';
 import './Popup.css';
+import { TotalScoreConsumption } from './TotalScoreConsumption';
 
 const REACT_APP_TOKEN = secrets.REACT_APP_TOKEN;
+const REACT_APP_API_URL_ANALYSES = secrets.REACT_APP_API_URL_ANALYSES;
+const REACT_APP_API_URL_BENCHMARKS = secrets.REACT_APP_API_URL_BENCHMARKS;
 
 async function getCurrentTab() {
   let queryOptions = { active: true, lastFocusedWindow: true };
   let [tab] = await chrome.tabs.query(queryOptions);
   return tab;
+}
+async function getBenchmarkAnalyse(url) {
+  const requestOptions = {
+    method: 'GET',
+  };
+
+  const existingBenchmarkAnalyse = fetch(
+    `${REACT_APP_API_URL_BENCHMARKS}/domain?domain=${url}`,
+    requestOptions
+  )
+    .then((response) => {
+      return response.json();
+    })
+    .then((result) => result)
+    .catch((error) => {
+      throw new Error(error);
+    });
+  return existingBenchmarkAnalyse;
 }
 async function createAnalyse(url) {
   const myHeaders = new Headers();
@@ -28,13 +49,12 @@ async function createAnalyse(url) {
     redirect: 'follow',
   };
 
-  const createAnalyse = fetch(
-    'https://api.greenframe.io/analyses',
-    requestOptions
-  )
+  const createAnalyse = fetch(REACT_APP_API_URL_ANALYSES, requestOptions)
     .then((response) => response.json())
     .then((result) => result)
-    .catch((error) => { throw new Error(error) });
+    .catch((error) => {
+      throw new Error(error);
+    });
 
   return createAnalyse;
 }
@@ -45,16 +65,31 @@ async function getAnalyseById(id) {
     redirect: 'follow',
   };
 
-  return fetch(`https://api.greenframe.io/analyses/${id}`, requestOptions)
+  return fetch(`${REACT_APP_API_URL_ANALYSES}/${id}`, requestOptions)
     .then((response) => response.text())
     .then((result) => result)
     .catch((error) => console.log('error', error));
 }
 
 const Popup = () => {
-  const [loading, setLoading] = React.useState(false);
-  const [result, setResult] = React.useState(null);
-  const [error, setError] = React.useState(false);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    getCurrentTab()
+      .then((tab) => getBenchmarkAnalyse(tab.url))
+      .then((result) => {
+        console.log('result', result);
+        setResult(result);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setLoading(false);
+      });
+  }, []);
 
   async function handleClick() {
     setLoading(true);
@@ -75,8 +110,6 @@ const Popup = () => {
       try {
         const resultedAnalyse = await getAnalyseById(createdAnalyse?.id);
         const parsedResult = JSON.parse(resultedAnalyse);
-        console.log(resultedAnalyse);
-        console.log(parsedResult.status)
         if (parsedResult.status === 'finished') {
           clearInterval(interval);
           setResult(parsedResult);
@@ -93,12 +126,8 @@ const Popup = () => {
         setError(true);
         setLoading(false);
       }
-
-
     }, 5000);
-
   }
-
   return (
     <div className="greenframe_popup">
       <header className="header">
@@ -106,19 +135,30 @@ const Popup = () => {
         <h1 className="header_title">GreenFrame</h1>
       </header>
       <section className="section">
-        <button className="button" onClick={() => handleClick()} disabled={loading}>
-          Launch Analyze!
-        </button>
+        {!result && (
+          <button
+            className="button"
+            onClick={() => handleClick()}
+            disabled={loading}
+          >
+            Launch analysis!
+          </button>
+        )}
 
-        {loading && (<div className="loading"><p>Pending Analyze</p><div className="dot_elastic"></div></div>)}
-        {error && <p className="error">A error occured, please restart the analyze</p>}
-        {result && (
-          <div className="result">
-            <p className="result_title">Result: {result.status}</p>
-            <p className="result_text">
-              <span className="result_text_bold">{JSON.stringify(result.score)}</span>
-            </p>
+        {loading && (
+          <div className="loading">
+            <p>Pending Analyze</p>
+            <div className="dot_elastic"></div>
           </div>
+        )}
+        {error && (
+          <p className="error">A error occured, please restart the analysis</p>
+        )}
+        {result && (
+          <TotalScoreConsumption
+            score={result.score}
+            analysisId={result.analysisId}
+          />
         )}
       </section>
       <footer className="footer">
